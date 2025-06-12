@@ -16,7 +16,6 @@ export async function POST(req: Request) {
         headers: { "Content-Type": "application/json" },
       })
     }
-
     const transformedMessages = messages.map((msg: any) => ({
       role: msg.role,
       content: msg.content?.trim() || msg.parts?.[0]?.text?.trim() || "",
