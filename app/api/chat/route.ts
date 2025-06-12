@@ -142,12 +142,12 @@ Now, based on the above analysis, write a detailed technical design document
 that would pass senior staff level review at Amazon.
 
 You should prefer narrative style paragraphs but succinct and be humble. Remove any effort estimates.
-`[/HLD_PROMPT]`
+[/HLD_PROMPT]
 
 ---
 
 **Component Diagram Prompt Template:**
-`[COMPONENT_DIAGRAM_PROMPT]`
+[COMPONENT_DIAGRAM_PROMPT]
 Create a component diagram for the project.
 
 Please generate a component diagram in text format that shows:
@@ -161,20 +161,20 @@ Use mermaid diagram syntax to represent the component diagram clearly.
 
 **Example mermaid component diagram syntax:**
 
-```
+
 graph TD  
 A[Component A] --> B[Component B]  
 A --> C[Component C]  
 B --> D[Database]  
 C --> D  
-```
 
-`[/COMPONENT_DIAGRAM_PROMPT]`
+
+[/COMPONENT_DIAGRAM_PROMPT]
 
 ---
 
 **Sequence Diagram Prompt Template:**
-`[SEQ_DGM_PROMPT]`
+[SEQ_DGM_PROMPT]
 Please generate sequence diagrams in mermaid format that shows:
 
 How objects interact with each other
@@ -185,13 +185,13 @@ Use mermaid diagram syntax to represent the sequence diagram clearly.
 
 Example mermaid sequence diagram syntax:
 
-```
+
 sequenceDiagram  
 participant A as Component A  
 participant B as Component B  
 A-->>B: Request  
 B-->>A: Response  
-```
+
 
 \[/SEQ\_DGM\_PROMPT]
 
@@ -205,8 +205,6 @@ Explain the rationale behind the decisions.
 ---
 
 Finally, Write LLD in Java
-
-
 `
 
 export async function POST(req: Request) {
