@@ -9,9 +9,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Send, Copy, RotateCcw, ArrowDown } from "lucide-react"
+import { Loader2, Send, Copy, RotateCcw } from "lucide-react"
 import { MermaidRenderer } from "@/components/mermaid-renderer"
-import { MarkdownRenderer } from "@/components/markdown-renderer"
 
 export default function ClaudeChatInterface() {
   const { messages, input, handleInputChange, handleSubmit, isLoading, reload } = useChat({
@@ -20,10 +19,20 @@ export default function ClaudeChatInterface() {
 
   const [charCount, setCharCount] = useState(0)
   const [tokenCount, setTokenCount] = useState(0)
-  const [showScrollToBottom, setShowScrollToBottom] = useState(false)
+  const [autoScroll, setAutoScroll] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const scrollToBottom = () => {
+    if (autoScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, autoScroll])
 
   useEffect(() => {
     setCharCount(input.length)
@@ -31,20 +40,17 @@ export default function ClaudeChatInterface() {
     setTokenCount(Math.ceil(input.length / 4))
   }, [input])
 
-  // Handle scroll detection to show/hide scroll to bottom button
+  // Handle scroll detection to pause auto-scroll
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 50
-    setShowScrollToBottom(!isAtBottom)
-  }
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    setAutoScroll(isAtBottom)
   }
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim()) {
+      setAutoScroll(true) // Re-enable auto-scroll on new message
       handleSubmit(e)
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto"
@@ -115,23 +121,32 @@ export default function ClaudeChatInterface() {
           <CardHeader className="border-b bg-white/50 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-2xl font-bold text-slate-800">Chat Interface</CardTitle>
+                <CardTitle className="text-2xl font-bold text-slate-800">Claude 4 Sonnet Chat Interface</CardTitle>
                 <p className="text-slate-600 mt-1">Advanced AI conversation with extended reasoning capabilities</p>
               </div>
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                System design
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                  claude-4-sonnet-20250514
+                </Badge>
+                {!autoScroll && (
+                  <Button variant="outline" size="sm" onClick={() => setAutoScroll(true)} className="text-xs">
+                    Resume Auto-scroll
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
 
-          <CardContent className="flex-1 flex flex-col p-0 relative">
+          <CardContent className="flex-1 flex flex-col p-0">
             <ScrollArea className="flex-1 p-6" onScrollCapture={handleScroll} ref={scrollAreaRef}>
               <div className="space-y-6">
                 {messages.length === 0 && (
                   <div className="text-center py-12">
-                    <div className="text-slate-400 text-lg mb-4">Your Software Architect</div>
+                    <div className="text-slate-400 text-lg mb-4">Your Amazon Software Architect</div>
                     <div className="text-sm text-slate-500 max-w-2xl mx-auto">
-                      skdfn
+                      I'm an experienced software architect with 10+ years at Amazon. I'll help you design complex
+                      software systems using AWS technologies, create technical specifications, and guide you through
+                      the entire software design process from requirements to implementation.
                     </div>
                   </div>
                 )}
@@ -174,8 +189,8 @@ export default function ClaudeChatInterface() {
                                   {parsedContent.map((contentPart, partIndex) => (
                                     <div key={partIndex}>
                                       {contentPart.type === "text" ? (
-                                        <div className="prose prose-sm max-w-none">
-                                          <MarkdownRenderer content={contentPart.content} />
+                                        <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                                          {contentPart.content}
                                         </div>
                                       ) : (
                                         <div className="my-4">
@@ -222,8 +237,8 @@ export default function ClaudeChatInterface() {
                               {parseMermaidFromText(message.content).map((contentPart, partIndex) => (
                                 <div key={partIndex}>
                                   {contentPart.type === "text" ? (
-                                    <div className="prose prose-sm max-w-none">
-                                      <MarkdownRenderer content={contentPart.content} />
+                                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                                      {contentPart.content}
                                     </div>
                                   ) : (
                                     <div className="my-4">
@@ -265,17 +280,6 @@ export default function ClaudeChatInterface() {
               <div ref={messagesEndRef} />
             </ScrollArea>
 
-            {/* Scroll to bottom button - only shows when not at bottom */}
-            {showScrollToBottom && (
-              <Button
-                onClick={scrollToBottom}
-                className="absolute bottom-24 right-8 rounded-full h-12 w-12 p-0 shadow-lg bg-blue-600 hover:bg-blue-700 z-10"
-                title="Scroll to bottom"
-              >
-                <ArrowDown className="h-5 w-5" />
-              </Button>
-            )}
-
             <div className="border-t bg-white/50 backdrop-blur-sm p-6">
               <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div className="relative">
@@ -283,7 +287,7 @@ export default function ClaudeChatInterface() {
                     ref={textareaRef}
                     value={input}
                     onChange={handleTextareaChange}
-                    placeholder="A'"
+                    placeholder="Ask me to design any software system as your Amazon software architect... Try: 'Design a Facebook feed generator system'"
                     className="min-h-[80px] max-h-[200px] resize-none pr-20 text-sm leading-relaxed"
                     disabled={isLoading}
                   />
