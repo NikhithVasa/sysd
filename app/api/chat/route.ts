@@ -1,8 +1,6 @@
-import { anthropic, type AnthropicProviderOptions } from "@ai-sdk/anthropic"
 import { streamText } from "ai"
 
-export const maxDuration = 300
-
+export const maxDuration = 59
 
 const SYSTEM_PROMPT = `You are a highly experienced software architect with over 10 years of experience designing complex software systems at Amazon. Your expertise spans multiple domains including distributed systems, cloud architecture, API design, database modeling, and enterprise application development.
 
@@ -158,42 +156,47 @@ Use mermaid diagram syntax to represent the sequence diagram clearly.
 Write an API specification for the service(s) for this project. Use the "Smithy" format for API Spec unless otherwise requested.  
 Explain the rationale behind the decisions.
 
-**At the end, create LLD in JAVA LANGUAGE (ONLY)** with all the bean classes`;
+**At the end, create LLD in JAVA LANGUAGE (ONLY)** with all the bean classes`
 
+export async function POST(req: Request) {
+  try {
+    const { messages } = await req.json()
 
-export async function POST(req: Request): Promise<Response> {
-  const { messages } = await req.json();
-
-  const modifiedMessages = messages.map((msg: any, index: number) => {
-    if (msg.role === "user" && index === messages.length - 1) {
-      return {
-        ...msg,
-        content: msg.content.trim() + " Do not ask any questions.",
-      };
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: "Invalid messages format" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
     }
-    return msg;
-  });
 
-  const providerOptions: AnthropicProviderOptions = {
-    thinking: {
-      type: "enabled",
-      budgetTokens: 15000,
-    },
-  };
+    // Transform messages to the correct format
+    const transformedMessages = messages.map((msg: any) => ({
+      role: msg.role,
+      content: msg.content || msg.parts?.[0]?.text || "",
+    }))
 
-  const result = streamText({
-    model: "anthropic/claude-4-sonnet-20250514",
-    messages: modifiedMessages,
-    system: SYSTEM_PROMPT,
-    maxTokens: 8192,
-    temperature: 0.7,
-    providerOptions: { anthropic: providerOptions },
-    headers: {
-      "anthropic-beta": "interleaved-thinking-2025-05-14",
-    },
-  });
+    // Add instruction to the last user message
+    if (transformedMessages.length > 0) {
+      const lastMessage = transformedMessages[transformedMessages.length - 1]
+      if (lastMessage.role === "user") {
+        lastMessage.content = lastMessage.content.trim() + " Do not ask any questions."
+      }
+    }
 
-  return result.toDataStreamResponse({
-    sendReasoning: true,
-  });
+    const result = streamText({
+      model: "anthropic/claude-4-sonnet-20250514",
+      messages: transformedMessages,
+      system: SYSTEM_PROMPT,
+      maxTokens: 8192,
+      temperature: 0.7,
+    })
+
+    return result.toDataStreamResponse()
+  } catch (error) {
+    console.error("API Error:", error)
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    })
+  }
 }
