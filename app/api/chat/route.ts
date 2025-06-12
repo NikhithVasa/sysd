@@ -157,29 +157,31 @@ Write an API specification for the service(s) for this project. Use the "Smithy"
 Explain the rationale behind the decisions.
 
 **At the end, create LLD in JAVA LANGUAGE (ONLY)** with all the bean classes`
-
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json()
+    const body = await req.json()
+    console.log("Incoming request body:", body)
 
+    const { messages } = body
     if (!messages || !Array.isArray(messages)) {
+      console.error("Invalid messages format")
       return new Response(JSON.stringify({ error: "Invalid messages format" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       })
     }
 
-    // Transform messages to the correct format
     const transformedMessages = messages.map((msg: any) => ({
       role: msg.role,
-      content: msg.content || msg.parts?.[0]?.text || "",
+      content: msg.content?.trim() || msg.parts?.[0]?.text?.trim() || "",
     }))
 
-    // Add instruction to the last user message
+    console.log("Transformed Messages:", transformedMessages)
+
     if (transformedMessages.length > 0) {
       const lastMessage = transformedMessages[transformedMessages.length - 1]
       if (lastMessage.role === "user") {
-        lastMessage.content = lastMessage.content.trim() + " Do not ask any questions."
+        lastMessage.content += " Do not ask any questions."
       }
     }
 
@@ -192,6 +194,7 @@ export async function POST(req: Request) {
     })
 
     return result.toDataStreamResponse()
+
   } catch (error) {
     console.error("API Error:", error)
     return new Response(JSON.stringify({ error: "Internal server error" }), {
