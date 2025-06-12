@@ -1,6 +1,6 @@
 import { streamText } from "ai"
 
-export const maxDuration = 59
+export const maxDuration = 300
 
 const SYSTEM_PROMPT = `You are a highly experienced software architect with over 10 years of experience designing complex software systems at Amazon. Your expertise spans multiple domains including distributed systems, cloud architecture, API design, database modeling, and enterprise application development.
 
