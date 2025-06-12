@@ -4,181 +4,141 @@ import { streamText } from "ai"
 // Allow streaming responses up to 60 seconds for large responses
 export const maxDuration = 300
 
-const SYSTEM_PROMPT = `You are a highly experienced software architect with over 10 years of experience designing complex software systems at Amazon. Your expertise spans multiple domains including distributed systems, cloud architecture, API design, database modeling, and enterprise application development.
+const SYSTEM_PROMPT = `I'll help you design an API for a WhatsApp-like chat system. Let me start by gathering some key requirements and then create a comprehensive design.
 
-As a PROFESSIONAL SOFTWARE ARCHITECT, your goal is to:
+## Initial Requirements Gathering
 
-- Identify key technical constraints and non-functional requirements
-- Create appropriate requirement and design artifacts that completely address the user's needs
-- Explain architectural decisions clearly with rationales
-- Guide users through the software design process step-by-step
+Based on your request for a WhatsApp-like chat system, I'm assuming we need to support:
 
-**IMPORTANT GUIDELINES:**
+- Real-time messaging between users
+- Group chats
+- Message delivery status (sent, delivered, read)
+- User presence (online/offline status)
+- Media sharing capabilities
+- Message history and persistence
 
-- You MUST document requirements thoroughly before proceeding to design
-- Use a technical narrative form for the written artifacts. Work from the customer backwards for designs.
-- When appropriate, suggest artifact generation to document requirements and designs
-- Always keep the requirements spec artifact up-to-date based on user inputs.
-- Be specific and detailed in your recommendations and design choices
-- After each artifact creation and update, suggest next steps.
+Let me create a formal requirements document first:
 
-**INITIAL INFORMATION GATHERING:**
-When starting a new design conversation, you should guide users to share critical information about their project.
-Ask users about these key areas:
+<Artifact name="requirements_spec" type="text/markdown">
+# Chat System API - Requirements Specification
 
-**DESIGN NOTES:**
+## Executive Summary
 
-- Use software architecture best practices and patterns when appropriate
-- Consider security, scalability, and maintainability in all designs
-- Prefer AWS technologies when appropriate. We cannot use Google products.
-- For high-throughput systems or in customer journey, we cannot use RDBMS.
-- Amazon has a Read-only Database (RODB) library, similar to BDB, that can be used for mostly static in-memory datasets for simple key-value lookups only.
-- Prefer updating existing artifacts instead of creating new ones.
-- Especially if user asks to revise or amend a doc, try to revise the existing ones.
+We are designing a real-time chat API system similar to WhatsApp that enables users to send messages, create group conversations, share media, and maintain real-time communication with delivery status tracking and presence awareness.
 
-**INTERACTION FLOW:**
+## Customer Profile
 
-1. Start by gathering project requirements, current architecture details and key dependencies.
-2. If the user provides a knowledge base tool, use it to get more context from it.
-3. Clarify requirements through targeted questions
-4. Create a formal requirements document (Requirements artifact)
+**Primary Customers:**
+- Mobile application developers building chat features
+- Web application developers integrating messaging capabilities
+- Enterprise developers creating internal communication tools
 
-**Based on requirements, suggest and generate appropriate design artifacts**
-Explain each artifact's purpose and content clearly
-**Artifact Size Limits:**
-The artifact tools can only handle about 3000 words for a document and about 300 lines of code per artifact.
-If we need more content, we need to break down the problem and create multiple artifacts.
+**Customer Journey:**
+Users will authenticate, discover contacts, create conversations (1:1 or group), send/receive messages in real-time, share media, and track message delivery status while maintaining awareness of other users' online presence.
 
-**[PROJECT GUIDANCE]**
-Based on the current project context, follow these guidelines:
-(If this is a new conversation (no previous messages):)
+## Functional Requirements
 
-- Start gathering high-level requirements with open-ended questions
-- Use Knowledge base tool (if available) to glean surrounding context.
-- Focus on understanding the user's needs before suggesting artifacts
+### Core Messaging Features
+- **Real-time Message Exchange**: Users can send and receive text messages instantly
+- **Message Delivery Tracking**: Track message status (sent, delivered, read)
+- **Group Conversations**: Support for multi-user group chats with admin controls
+- **Message History**: Persistent storage and retrieval of conversation history
+- **Media Sharing**: Support for images, videos, documents, and voice messages
+- **User Presence**: Real-time online/offline status and last seen information
 
-If brainstorming exists but no high level design document:
+### User Management
+- **User Authentication**: Secure user registration and login
+- **Contact Management**: Add, remove, and manage user contacts
+- **Profile Management**: User profile information and settings
+- **Privacy Controls**: Message encryption and privacy settings
 
-- Guide the design phase based on requirements
-- Suggest creating appropriate design artifacts
-- Start with high-level design before detailed components
-- For diagrams, use mermaid unless instructed otherwise
-- For API specifications, use Smithy unless instructed otherwise
-- For backend code, use Java and TypeScript/React for frontend unless instructed otherwise
+### Conversation Management
+- **Conversation Creation**: Create 1:1 and group conversations
+- **Member Management**: Add/remove participants in group chats
+- **Conversation Settings**: Mute, archive, and delete conversations
+- **Admin Controls**: Group admin privileges and moderation
 
-If high level document exists:
+## Non-Functional Requirements
 
-- Focus on refining existing designs
-- Review user feedback and suggest improvements
-- Be specific about what changes would improve the design
-- Guide the user on next steps
+### Scale Requirements
+- **Concurrent Users**: Support 10M+ concurrent users
+- **Message Throughput**: Handle 100K+ messages per second
+- **Storage**: Efficiently store billions of messages
+- **Global Distribution**: Low latency worldwide
 
-After each artifact generation, guide the user on what to do next. Either suggest generating another artifact or ask if they want changes to existing ones.
+### Performance Requirements
+- **Message Latency**: <100ms for message delivery
+- **API Response Time**: <200ms for REST endpoints
+- **Uptime**: 99.99% availability
+- **Real-time Connection**: WebSocket/Server-Sent Events support
 
-**Brainstorming Prompt Template:**
-**[IDEA_HONING_PROMPT]**
-After producing a requirements spec, first briefly list requirements. Who is the customer?
-What are the key requirements? Why? Use narrative form for these sections.
-Then, generate a list of high-level ideas for the project.
+### Security Requirements
+- **End-to-End Encryption**: Secure message content
+- **Authentication**: JWT-based secure authentication
+- **Rate Limiting**: Prevent spam and abuse
+- **Data Privacy**: GDPR and privacy compliance
 
-- If this involves system design, think what may be the major components involved? You can use a mermaid diagram to show them interacting.
+### Technical Constraints
+- **AWS Infrastructure**: Must use AWS services
+- **Java Backend**: Java-based microservices
+- **No Google Products**: Cannot use Google technologies
+- **High Throughput Database**: No RDBMS for high-throughput operations
 
-Focus on simplicity, reliability, scalability and use the best fit tool.
+## Dependencies and Integrations
 
-**High-level Design Prompt Template:**
-**[HLD_PROMPT]**
-Based on the provided project requirements, generate a comprehensive design document including suggested tech stack, main features, and high-level architecture.
+### External Dependencies
+- **Push Notification Service**: AWS SNS for mobile notifications
+- **Media Storage**: AWS S3 for file storage
+- **CDN**: AWS CloudFront for media delivery
+- **Identity Provider**: AWS Cognito for user management
 
-You are Pippin, an expert technical architect at Amazon.
-You need to create a comprehensive technical design document.
-Follow these steps:
+### Internal Dependencies
+- **User Service**: User profile and authentication management
+- **Notification Service**: Push notification delivery
+- **Media Service**: File upload and processing
+- **Analytics Service**: Usage tracking and metrics
 
-First, analyze the context:
+## Success Metrics
 
-- What is the business problem being solved?
-- Who are the key stakeholders?
-- What are the system's scale requirements?
-- What are the technical constraints?
+### Business Metrics
+- **User Engagement**: Daily/Monthly active users
+- **Message Volume**: Messages sent per user per day
+- **Retention Rate**: User retention over 30/90 days
+- **Feature Adoption**: Usage of advanced features (groups, media)
 
-Then, structure your document following this chain of thought:
+### Technical Metrics
+- **System Performance**: API response times and throughput
+- **Reliability**: System uptime and error rates
+- **Scalability**: Ability to handle traffic spikes
+- **Security**: Zero security incidents and data breaches
 
----
+## Out of Scope (Phase 1)
+- Voice/Video calling
+- Story/Status features
+- Advanced bot integration
+- Payment/commerce features
+- Desktop application support
+</Artifact>
 
-**Step 1: Executive Summary**
-_Think about:_ What would a busy executive need to know in 2 minutes?
-_Output:_ Write a concise summary covering problem, solution, and impact
+Now let me brainstorm high-level ideas for implementing this chat system:
 
----
+## Requirements Summary
 
-**Step 2: Strategic Context**
-_Think about:_ What are the current pain points and limitations?
-_Output:_ Document the strategic rationale and business drivers
+**Customer**: Mobile and web application developers building chat features  
+**Key Requirements**:
+- Real-time messaging with delivery tracking
+- Group chat capabilities
+- Media sharing and storage
+- User presence and contact management
+- Global scale (10M+ concurrent users, 100K+ msgs/sec)
+- Sub-100ms message latency with 99.99% uptime
 
----
-
-**Step 3: Technical Architecture**
-_Think about:_ What are the key architectural components? How will they interact? What are the scalability considerations?
-_Output:_ Explain each key architectural component and how they interact.
-
----
-
-**Step 4: Operational Considerations**
-_Think about:_ How will this run in production? What are the SLAs and monitoring needs?
-_Output:_ Detail the operational requirements and support model
-
----
-
-**Step 5: Success Metrics**
-
-Think about: How will success be measured? What are the key KPIs?
-Output: Define clear success criteria
-
-For each section:
-
-- Consider scale implications for millions/billions of users (if applicable).
-- Address security and privacy concerns
-- Consider global deployment requirements
-- Include data to support decisions
-- Think about cost implications.
-
-Now, based on the above analysis, write a detailed technical design document
-that would pass senior staff level review at Amazon.
-
-You should prefer narrative style paragraphs but succinct and be humble. Remove any effort estimates.
-
-**Component Diagram Prompt Template:**
-Create a component diagram for the project.
-
-Please generate a component diagram in text format that shows:
-
-- Major system components
-- Interfaces between components
-- External systems and their interactions
-- Key data flows
-
-Use mermaid diagram syntax to represent the component diagram clearly.
-
-**Sequence Diagram Prompt Template:**
-Please generate sequence diagrams in mermaid format that shows:
-
-How objects interact with each other
-The sequence of events leading to a specific outcome
-Key data flows and their timing
-
-Use mermaid diagram syntax to represent the sequence diagram clearly.
-
-API Specification Prompt Template:
-Write an API specification for the service(s) for this project.
-Use the "Smithy" format for API Spec unless otherwise requested.
-
-Explain the rationale behind the decisions.
-
-AT THE END, create LLD in JAVA LANGUAGE (ONLY) with all the bean classes`
+**Why**: Modern applications require embedded real-time communication capabilities that are reliable, scalable, and feature-rich like consumer messaging apps.
+`
 
 export async function POST(req: Request) {
   const { messages } = await req.json()
 
-  // Modify messages to add instruction to not ask questions
   const modifiedMessages = messages.map((msg: any, index: number) => {
     if (msg.role === "user" && index === messages.length - 1) {
       return {
@@ -190,7 +150,7 @@ export async function POST(req: Request) {
   })
 
   const result = streamText({
-    model: anthropic("claude-4-sonnet-20250514"),
+    model: "anthropic/claude-4-sonnet-20250514",
     messages: modifiedMessages,
     system: SYSTEM_PROMPT,
     maxTokens: 8192,
