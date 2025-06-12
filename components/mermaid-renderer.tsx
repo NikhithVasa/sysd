@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Maximize2, ZoomIn, ZoomOut, Copy, Download } from "lucide-react"
+import { Maximize2, ZoomIn, ZoomOut, Copy, Download } from 'lucide-react'
 
 interface MermaidRendererProps {
   chart: string
@@ -18,7 +18,14 @@ export function MermaidRenderer({ chart, title, diagramType }: MermaidRendererPr
   const [zoom, setZoom] = useState(100)
   const [error, setError] = useState<string | null>(null)
 
-  const renderMermaid = async (element: HTMLDivElement, id: string) => {
+  // Generate valid CSS selector IDs
+  const generateValidId = (prefix: string) => {
+    const timestamp = Date.now()
+    const random = Math.random().toString(36).substring(2, 8)
+    return `${prefix}_${timestamp}_${random}`
+  }
+
+  const renderMermaid = async (element: HTMLDivElement, idPrefix: string) => {
     try {
       // Dynamically import mermaid
       const mermaid = (await import("mermaid")).default
@@ -28,25 +35,40 @@ export function MermaidRenderer({ chart, title, diagramType }: MermaidRendererPr
         theme: "default",
         securityLevel: "loose",
         fontFamily: "ui-sans-serif, system-ui, sans-serif",
+        flowchart: {
+          useMaxWidth: true,
+          htmlLabels: true,
+        },
+        sequence: {
+          useMaxWidth: true,
+        },
+        gantt: {
+          useMaxWidth: true,
+        },
       })
 
       element.innerHTML = ""
-      const { svg } = await mermaid.render(id, chart)
+      
+      const validId = generateValidId(idPrefix)
+      const { svg } = await mermaid.render(validId, chart)
       element.innerHTML = svg
       setError(null)
     } catch (err) {
       console.error("Mermaid rendering error:", err)
       setError("Failed to render diagram")
-      element.innerHTML = `<div class="text-red-500 text-sm p-4 border border-red-200 rounded">
-        <p>Failed to render Mermaid diagram</p>
-        <pre class="mt-2 text-xs bg-red-50 p-2 rounded overflow-x-auto">${chart}</pre>
+      element.innerHTML = `<div class="text-red-500 text-sm p-4 border border-red-200 rounded bg-red-50">
+        <p class="font-medium mb-2">Failed to render Mermaid diagram</p>
+        <details class="text-xs">
+          <summary class="cursor-pointer hover:text-red-700">View diagram code</summary>
+          <pre class="mt-2 bg-red-100 p-2 rounded overflow-x-auto whitespace-pre-wrap">${chart}</pre>
+        </details>
       </div>`
     }
   }
 
   useEffect(() => {
     if (mermaidRef.current && !isLoaded) {
-      renderMermaid(mermaidRef.current, `mermaid-${Date.now()}-${Math.random()}`)
+      renderMermaid(mermaidRef.current, "mermaid")
       setIsLoaded(true)
     }
   }, [chart, isLoaded])
@@ -54,7 +76,7 @@ export function MermaidRenderer({ chart, title, diagramType }: MermaidRendererPr
   const handleModalOpen = () => {
     setTimeout(() => {
       if (modalMermaidRef.current) {
-        renderMermaid(modalMermaidRef.current, `mermaid-modal-${Date.now()}-${Math.random()}`)
+        renderMermaid(modalMermaidRef.current, "mermaid_modal")
       }
     }, 100)
   }
@@ -160,7 +182,11 @@ export function MermaidRenderer({ chart, title, diagramType }: MermaidRendererPr
         </div>
       </div>
 
-      {error && <div className="px-4 py-2 bg-red-50 border-t border-red-200 text-red-600 text-sm">{error}</div>}
+      {error && (
+        <div className="px-4 py-2 bg-red-50 border-t border-red-200 text-red-600 text-sm">
+          {error}
+        </div>
+      )}
     </div>
   )
 }

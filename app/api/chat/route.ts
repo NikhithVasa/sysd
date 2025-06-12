@@ -2,7 +2,7 @@ import { anthropic, type AnthropicProviderOptions } from "@ai-sdk/anthropic"
 import { streamText } from "ai"
 
 // Allow streaming responses up to 60 seconds for large responses
-export const maxDuration = 59
+export const maxDuration = 259
 
 const SYSTEM_PROMPT = `You are a highly experienced software architect with over 10 years of experience designing complex software systems at Amazon. Your expertise spans multiple domains including distributed systems, cloud architecture, API design, database modeling, and enterprise application development.
 
@@ -173,12 +173,23 @@ Use the "Smithy" format for API Spec unless otherwise requested.
 
 Explain the rationale behind the decisions.`
 
+
 export async function POST(req: Request) {
   const { messages } = await req.json()
 
+
+ const modifiedMessages = messages.map((msg: any, index: number) => {
+    if (msg.role === "user" && index === messages.length - 1) {
+      return {
+        ...msg,
+        content: msg.content.trim() + " Do not ask any questions.",
+      }
+    }
+    return msg
+  })
   const result = streamText({
     model: anthropic("claude-4-sonnet-20250514"),
-    messages,
+    messages: modifiedMessages,
     system: SYSTEM_PROMPT,
     maxTokens: 8192,
     temperature: 0.7,
