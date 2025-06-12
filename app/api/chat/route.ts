@@ -186,7 +186,7 @@ export async function POST(req: Request) {
     }
 
     const result = streamText({
-      model: "anthropic/claude-4-sonnet-20250514",
+      model: "claude-3-5-sonnet-2024062",
       messages: transformedMessages,
       system: SYSTEM_PROMPT,
       maxTokens: 8192,
